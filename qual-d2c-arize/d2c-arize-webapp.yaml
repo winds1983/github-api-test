@@ -1,0 +1,77 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: "HelmRelease"
+metadata:
+  name: "d2c-webapp"
+  namespace: "qual-d2c-arize"
+
+spec:
+  interval: 2m
+  releaseName: d2c-webapp
+  chart:
+    spec:
+      chart: ./d2c-arize
+      sourceRef:
+        name: charts-fitstation
+        kind: GitRepository
+        namespace: flux2-system
+  values:
+    image:
+      repository: "434506272915.dkr.ecr.us-east-1.amazonaws.com/aria/webapp"
+      tag: "0.1.224"
+
+    iam_role:
+      name: "arn:aws:iam::434506272915:role/aria_webapp_dev"
+    runAsRoot: true
+    ingress:
+      enabled: true
+      host: "d2c.qual.myarize-orthotics.com"
+      gateway: "istio-system/d2c-qual"
+      path: "/"
+      servicePort: 80
+    env:
+      MONGODB_NAME: "d2chparize_dev"
+      MONGODB_HOST: "nonprod-pl-2.5vqdg.mongodb.net"
+      MONGODB_PARAMETER: "authMechanism=MONGODB-AWS&authSource=$external"
+      MONGODB_ENABLE_DNS_SEEDLIST: "true"
+      s3_bucket: "aria-hparize-d2c-dev"
+      s3_region: "us-east-1"
+    secrets:
+      enabled: true
+      smSecretName:
+        - "printos/fs/aria/d2cdev/webapp"
+        - "printos/fs/aria/d2cdev/sendgrid-key"
+    k8s_secrets:
+      enabled: true
+      envs:
+        - "MONGODB_USERNAME"
+        - "MONGODB_PASSWORD"
+        - "CLIENT_ID"
+        - "CLIENT_SECRET"
+        - "STORE_ID"
+        - "API_KEY"
+        - "MAGENTO_KEY"
+        - "SENDGRID_API_KEY"
+    ports:
+    - name: "http"
+      externalPort: 80
+      protocol: "TCP"
+      containerPort: 3000
+    healthCheck:
+      enable: true
+      liveness:
+        path: "/healthz"
+        port: 3000
+      readiness:
+        path: "/ready"
+        port: 3000
+    resources:
+      requests:
+        cpu: 0.1
+        memory: "128M"
+      limits:
+        cpu: 0.5
+        memory: "256M"
+    hpa:
+      enabled: false
+
