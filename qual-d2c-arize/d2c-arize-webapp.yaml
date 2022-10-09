@@ -18,7 +18,7 @@ spec:
   values:
     image:
       repository: "434506272915.dkr.ecr.us-east-1.amazonaws.com/aria/webapp"
-      tag: "0.1.225"
+      tag: "0.1.226"
 
     iam_role:
       name: "arn:aws:iam::434506272915:role/aria_webapp_dev"
